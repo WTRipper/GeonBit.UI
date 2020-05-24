@@ -319,7 +319,7 @@ namespace GeonBit.UI.Entities
         /// </summary>
         public bool UseActualSizeForCollision = true;
 
-        /// <summary>Entity size (in pixels). Value of 0 will take parent's full size. -1 will take defaults.</summary>
+        /// <summary>Entity size (in pixels). Value of 0 will take parent's full size. -1 will take defaults. -3 will take parent's remaining size.</summary>
         protected Vector2 _size;
 
         /// <summary>Offset, in pixels, from the anchor position.</summary>
@@ -1658,10 +1658,73 @@ namespace GeonBit.UI.Entities
                 parentDest = _parent._destRectInternal;
             }
 
-            // calc and return size
-            return new Point(
-                (size.X == 0f ? parentDest.Width : (size.X > 0f && size.X < 1f ? (int)(parentDest.Width * size.X) : (int)size.X)),
-                (size.Y == 0f ? parentDest.Height : (size.Y > 0f && size.Y < 1f ? (int)(parentDest.Height * size.Y) : (int)size.Y)));
+            // calc width
+            int x;
+            if (size.X == 0f)
+            {
+                x = parentDest.Width;
+            }
+            else if (size.X > 0f && size.X < 1f)
+            {
+                x = (int)(parentDest.Width * size.X);
+            }
+            else if (size.X == -3f)
+            {
+                int remainingWidth = parentDest.Width;
+                int shareWidthCounter = 1;
+                foreach (Entity child in _parent.Children)
+                {
+                    if (child._scaledSize != -3)
+                    {
+                        child.UpdateDestinationRectsIfDirty();
+                        remainingWidth -= child._destRect.Width + child._scaledSpaceBefore.X + child._scaledSpaceAfter.X;
+                    }
+                    else
+                    {
+                        shareWidthCounter++;
+                    }
+                }
+                x = Math.Max(remainingWidth / shareWidthCounter, 0);
+            }
+            else
+            {
+                x = (int)size.X;
+            }
+
+            // calc height
+            int y;
+            if (size.Y == 0f)
+            {
+                y = parentDest.Height;
+            }
+            else if (size.Y > 0f && size.Y < 1f)
+            {
+                y = (int)(parentDest.Height * size.Y);
+            }
+            else if (size.Y == -3f)
+            {
+                int remainingHeight = parentDest.Height;
+                int shareHeightCounter = 1;
+                foreach (Entity child in _parent.Children)
+                {
+                    if (child._scaledSize != -3)
+                    {
+                        child.UpdateDestinationRectsIfDirty();
+                        remainingHeight -= child._destRect.Height + child._scaledSpaceBefore.Y + child._scaledSpaceAfter.Y;
+                    }
+                    else
+                    {
+                        shareHeightCounter++;
+                    }
+                }
+                y = Math.Max(remainingHeight / shareHeightCounter, 0);
+            }
+            else
+            {
+                y = (int)size.Y;
+            }
+
+            return new Point(x,y);
         }
 
         /// <summary>
@@ -1695,6 +1758,7 @@ namespace GeonBit.UI.Entities
 
             // set size:
             // 0: takes whole parent size.
+            // -3: takes remaining parent size.
             // 0.0 - 1.0: takes percent of parent size.
             // > 1.0: size in pixels.
             Vector2 size = _scaledSize;
