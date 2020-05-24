@@ -108,6 +108,10 @@ namespace GeonBit.UI.Entities
         /// exceeding the parent container width.</summary>
         AutoInline,
 
+        /// <summary>Automatically position this entity to the right side of its older sibling at the right of parent element,
+        /// and begin a new row whenever exceeding the parent container width.</summary>
+        AutoInlineRight,
+
         /// <summary>Automatically position this entity to the right side of its older sibling, even if exceeding parent container width.</summary>
         AutoInlineNoBreak,
 
@@ -1745,6 +1749,7 @@ namespace GeonBit.UI.Entities
             {
                 case Anchor.Auto:
                 case Anchor.AutoInline:
+                case Anchor.AutoInlineRight:
                 case Anchor.AutoInlineNoBreak:
                 case Anchor.TopLeft:
                     ret.X = parent_left + (int)offset.X;
@@ -1794,7 +1799,7 @@ namespace GeonBit.UI.Entities
             }
 
             // special case for auto anchors
-            if ((anchor == Anchor.Auto || anchor == Anchor.AutoInline || anchor == Anchor.AutoCenter || anchor == Anchor.AutoInlineNoBreak))
+            if ((anchor == Anchor.Auto || anchor == Anchor.AutoInline || anchor == Anchor.AutoInlineRight || anchor == Anchor.AutoCenter || anchor == Anchor.AutoInlineNoBreak))
             {
                 // get previous entity before this
                 Entity prevEntity = GetPreviousEntity(true);
@@ -1811,13 +1816,19 @@ namespace GeonBit.UI.Entities
                         ret.X = prevEntity._destRect.Right + (int)(offset.X + prevEntity._scaledSpaceAfter.X + _scaledSpaceBefore.X);
                         ret.Y = prevEntity._destRect.Y;
                     }
+                    else if (anchor == Anchor.AutoInlineRight)
+                    {
+                        ret.X = parent._destRectInternal.Right - ret.Width + (int)(offset.X - _scaledSpaceAfter.X);
+                        ret.Y = prevEntity._destRect.Y;
+                    }
 
                     // handle inline align that ran out of width / or auto anchor not inline
                     if ((anchor == Anchor.AutoInline && ret.Right > parent._destRectInternal.Right) ||
+                        anchor == Anchor.AutoInlineRight && ret.Left < prevEntity._destRect.Right + (int)(offset.X + prevEntity._scaledSpaceAfter.X + _scaledSpaceBefore.X) ||
                         (anchor == Anchor.Auto || anchor == Anchor.AutoCenter))
                     {
                         // align x
-                        if (anchor != Anchor.AutoCenter)
+                        if (anchor != Anchor.AutoCenter && anchor != Anchor.AutoInlineRight)
                         {
                             ret.X = parent_left + (int)offset.X;
                         }
