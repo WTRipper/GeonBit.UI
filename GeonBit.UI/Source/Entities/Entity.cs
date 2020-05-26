@@ -1,4 +1,4 @@
-﻿#region File Description
+#region File Description
 //-----------------------------------------------------------------------------
 // Base UI entity. Every widget inherit from this class.
 // The base entity implement the following key functionality:
@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using GeonBit.UI.DataTypes;
+using System;
 
 namespace GeonBit.UI.Entities
 {
@@ -1672,19 +1673,19 @@ namespace GeonBit.UI.Entities
             {
                 int remainingWidth = parentDest.Width;
                 int shareWidthCounter = 1;
-                foreach (Entity child in _parent.Children)
+                foreach (Entity child in GetSibblings())
                 {
-                    if (child._scaledSize != -3)
+                    if (child._scaledSize.X != -3f)
                     {
                         child.UpdateDestinationRectsIfDirty();
-                        remainingWidth -= child._destRect.Width + child._scaledSpaceBefore.X + child._scaledSpaceAfter.X;
+                        remainingWidth -= child._destRect.Width + (int)(child._scaledSpaceBefore.X + child._scaledSpaceAfter.X);
                     }
                     else
                     {
                         shareWidthCounter++;
                     }
                 }
-                x = Math.Max(remainingWidth / shareWidthCounter, 0);
+                x = Math.Max(remainingWidth / shareWidthCounter, 1);
             }
             else
             {
@@ -1705,19 +1706,19 @@ namespace GeonBit.UI.Entities
             {
                 int remainingHeight = parentDest.Height;
                 int shareHeightCounter = 1;
-                foreach (Entity child in _parent.Children)
+                foreach (Entity child in GetSibblings())
                 {
-                    if (child._scaledSize != -3)
+                    if (child._scaledSize.Y != -3f)
                     {
                         child.UpdateDestinationRectsIfDirty();
-                        remainingHeight -= child._destRect.Height + child._scaledSpaceBefore.Y + child._scaledSpaceAfter.Y;
+                        remainingHeight -= child._destRect.Height + (int)(child._scaledSpaceBefore.Y + child._scaledSpaceAfter.Y);
                     }
                     else
                     {
                         shareHeightCounter++;
                     }
                 }
-                y = Math.Max(remainingHeight / shareHeightCounter, 0);
+                y = Math.Max(remainingHeight / shareHeightCounter, 1);
             }
             else
             {
@@ -1725,6 +1726,19 @@ namespace GeonBit.UI.Entities
             }
 
             return new Point(x,y);
+        }
+
+        private IReadOnlyList<Entity> GetSibblings()
+        {
+            List<Entity> sibblings = new List<Entity>();
+            foreach (Entity child in _parent.Children)
+            {
+                if (child != this)
+                {
+                    sibblings.Add(child);
+                }
+            }
+            return sibblings.AsReadOnly();
         }
 
         /// <summary>
